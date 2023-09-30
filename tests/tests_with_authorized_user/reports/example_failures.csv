@@ -1,0 +1,13 @@
+Method,Name,Error,Occurrences
+GET,/suppliers/subcategory/?project=project%20ID,HTTPError('400 Client Error: Bad Request for url: /suppliers/subcategory/?project=project%20ID'),2
+GET,/analytics/products/,HTTPError('400 Client Error: Bad Request for url: /analytics/products/'),1
+GET,/suppliers/subcategory/?supplier=50&supplier=51,HTTPError('400 Client Error: Bad Request for url: /suppliers/subcategory/?supplier=50&supplier=51'),1
+POST,/auth/update-password/,HTTPError('400 Client Error: Bad Request for url: /auth/update-password/'),2
+POST,/auth/recover-account/,HTTPError('400 Client Error: Bad Request for url: /auth/recover-account/'),1
+GET,/projects/price-matrix/project%20ID/,HTTPError('404 Client Error: Not Found for url: /projects/price-matrix/project%20ID/'),1
+GET,/auth/recover-account/,HTTPError('400 Client Error: Bad Request for url: /auth/recover-account/'),1
+POST,/auth/signup/,HTTPError('500 Server Error: Internal Server Error for url: /auth/signup/'),4
+GET,/products/7464/wishlist/,HTTPError('405 Client Error: Method Not Allowed for url: /products/7464/wishlist/'),2
+POST,/products/create/,HTTPError('400 Client Error: Bad Request for url: /products/create/'),1
+POST,/proposals/submit/project%20ID/,HTTPError('404 Client Error: Not Found for url: /proposals/submit/project%20ID/'),7
+POST,/proposals/request/quotation/project%20ID/,HTTPError('404 Client Error: Not Found for url: /proposals/request/quotation/project%20ID/'),4

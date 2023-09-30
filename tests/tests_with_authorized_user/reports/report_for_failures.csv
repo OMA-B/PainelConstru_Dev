@@ -1,0 +1,15 @@
+Method,Name,Error,Occurrences
+GET,/suppliers/subcategory/?project=project%20ID,HTTPError('400 Client Error: Bad Request for url: /suppliers/subcategory/?project=project%20ID'),2
+POST,/projects/create/,HTTPError('400 Client Error: Bad Request for url: /projects/create/'),1
+GET,/analytics/products/,HTTPError('400 Client Error: Bad Request for url: /analytics/products/'),2
+GET,/projects/history/project%20ID/,HTTPError('404 Client Error: Not Found for url: /projects/history/project%20ID/'),2
+POST,/auth/recover-account/,HTTPError('400 Client Error: Bad Request for url: /auth/recover-account/'),3
+GET,/projects/products/project%20ID/,HTTPError('404 Client Error: Not Found for url: /projects/products/project%20ID/'),1
+POST,/suppliers/message/email/,HTTPError('400 Client Error: Bad Request for url: /suppliers/message/email/'),1
+POST,/products/7464/track-price/,HTTPError('400 Client Error: Bad Request for url: /products/7464/track-price/'),2
+GET,/projects/sectors/project%20ID/,HTTPError('404 Client Error: Not Found for url: /projects/sectors/project%20ID/'),1
+GET,/auth/recover-account/,HTTPError('400 Client Error: Bad Request for url: /auth/recover-account/'),2
+POST,/auth/signup/,HTTPError('500 Server Error: Internal Server Error for url: /auth/signup/'),1
+GET,/suppliers/subcategory/?project=9998,HTTPError('400 Client Error: Bad Request for url: /suppliers/subcategory/?project=9998'),2
+POST,/proposals/submit/project%20ID/,HTTPError('404 Client Error: Not Found for url: /proposals/submit/project%20ID/'),9
+POST,/proposals/request/quotation/project%20ID/,HTTPError('404 Client Error: Not Found for url: /proposals/request/quotation/project%20ID/'),6
