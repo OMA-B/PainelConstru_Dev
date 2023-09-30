@@ -19,7 +19,10 @@ from paapi5_python_sdk.models.get_items_request import GetItemsRequest
 from paapi5_python_sdk.models.get_items_resource import GetItemsResource
 from paapi5_python_sdk.models.partner_type import PartnerType
 from paapi5_python_sdk.rest import ApiException
-import json, pprint
+import json, pprint, os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def parse_response(item_response_list):
@@ -37,13 +40,13 @@ def parse_response(item_response_list):
 def get_items(id_list):
     """ Following are your credentials """
     """ Please add your access key here """
-    access_key = "AKIAIZEP3L7JNQ2VO6DQ"
+    access_key = os.getenv('ACCESS_KEY')
 
     """ Please add your secret key here """
-    secret_key = "1pUKtGgLs1vS5aTKbsgn3x7/TkZm0aUd8JgxYqgf"
+    secret_key = os.getenv('SECRET_KEY')
 
     """ Please add your partner tag (store/tracking id) here """
-    partner_tag = "painelconst0a-20"
+    partner_tag = os.getenv('PARTNER_TAG')
 
     """ PAAPI host and region to which you want to send request """
     """ For more details refer: https://webservices.amazon.com/paapi5/documentation/common-request-parameters.html#host-and-region"""
