@@ -5,6 +5,13 @@ from clickup import project1, client1, task
 
 load_dotenv()
 
+assignees_budgetist = {
+  386: 44246993,
+  489: 18901584,
+  502: 81925823,
+  98: 18901639,
+}
+
 
 def create_task_on_clickup(project_data: dict, client_data: dict, task_data: dict= None):
     
@@ -24,28 +31,23 @@ def create_task_on_clickup(project_data: dict, client_data: dict, task_data: dic
   }
 
   # assigning projects
-  assignees_budgetist = {
-    386: 44246993,
-    489: 18901584,
-    502: 81925823,
-    98: 18901639,
-  }
-
   if int(project_data['Proj_Budgetist']) in assignees_budgetist:
     assignee = assignees_budgetist[int(project_data['Proj_Budgetist'])]
   else:
     assignee = assignees_budgetist[386]
 
-  # configuring project start date and due date
+  # configuring project start and due date
   def convert_date_string_to_datetime(local_date_string):
     local_date = datetime.strptime(local_date_string, '%d/%m/%Y')
     timestamp = (local_date - datetime(year=1970, month=1, day=1)).total_seconds() * 1000
     return timestamp
+  
   # start date
   if project_data['Proj_Date'] == None or '/' not in project_data['Proj_Date']:
     start_date = int(time.time() * 1000)
   else:
     start_date = convert_date_string_to_datetime(local_date_string=project_data['Proj_Date'])
+  
   # due date
   if project_data['Proj_Duedate'] == None or '/' not in project_data['Proj_Duedate']:
     three_days_in_millisec = 259200000
