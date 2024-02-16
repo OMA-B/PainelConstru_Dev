@@ -1,3 +1,8 @@
+old_painelconstru-apis/
+painelconstru-apis/
+ppc_cli/
+whatsapp_bot/db.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
