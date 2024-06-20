@@ -60,20 +60,64 @@ def record_composition_data(template_workbook, new_workbook, comp_id, comp_name,
             position_counter += 1
 
 
+def record_item_data(template_workbook, new_workbook, prod_id, prod_name, prod_unit, items_dict, last_prod_position_value):
 
+    # switch to item sheet in template file
+    template_sheet = template_workbook['Cotações']
+    # create same sheet in the new workbook
+    prod_sheet = new_workbook.create_sheet(title=template_sheet.title) if last_prod_position_value == 0 else new_workbook[template_sheet.title]
+    # fill in item details in new sheet
+    prod_data = {'prod_id': prod_id, 'prod_name': prod_name, 'prod_unit': f'UND : {prod_unit}'}
+    item_data = {} # {'EMPRESA': 'A7', 'CONTATO': 'B7', 'VALOR PROPOSTA (R$)': 'C7'}
+
+    for row in template_sheet.iter_rows():
+        for cell in row:
+            # insert normal parameters that are needed, such as headings
+            if cell.value != None:
+                if last_prod_position_value == 0: prod_sheet[cell.coordinate] = cell.value
+
+                if cell.value in ('EMPRESA', 'CONTATO', 'VALOR PROPOSTA (R$)'):
+                    item_data.update({cell.value: cell.coordinate})
+                    prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'] = cell.value
+
+            if cell.value in prod_data:
+                try: prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'] = prod_data[cell.value]
+                except ValueError: pass
+            
+    last_prod_position_value += 1
+
+    for item in items_dict:
+        prod_sheet[f"{item_data['EMPRESA'][0]}{int(item_data['EMPRESA'][1:]) + last_prod_position_value}"] = f"{item['supplier_ID']} - {item['supplier']}"
+        prod_sheet[f"{item_data['CONTATO'][0]}{int(item_data['CONTATO'][1:]) + last_prod_position_value}"] = f"{item['supplier_email']} - {item['supplier_address']} - {item['supplier_phone_1']}"
+        if len(item['prices_history']) != 0:
+            prices_history = sum([price[0] for price in item['prices_history']])
+            prod_sheet[f"{item_data['VALOR PROPOSTA (R$)'][0]}{int(item_data['VALOR PROPOSTA (R$)'][1:]) + last_prod_position_value}"] = prices_history
+        else: prod_sheet[f"{item_data['VALOR PROPOSTA (R$)'][0]}{int(item_data['VALOR PROPOSTA (R$)'][1:]) + last_prod_position_value}"] = None
+
+        last_prod_position_value += 1
+
+    print(prod_data)
+    print(item_data)
+    
+    last_prod_position_value += 2
+
+    return last_prod_position_value
+
+
+last_prod_position_value = 0
 
 def export_report(template_xls, proj_ID):
-    global sectors_parameters_position, project_parameters_position
+    global sectors_parameters_position, project_parameters_position, last_prod_position_value
     """receives the template.xls, the project_ID and the export_report file name to create an xls report.
     Saves the report.xls at S3 and return the file url."""
 
     # load project by proj_ID
-    filename=f"{proj_ID}.json"
+    filename=f"jsons/{proj_ID}.json"
     with open(file=filename, mode='r') as file:
         projects_data = json.load(fp=file)['projects']
 
     # read from the templates file the parameters
-    template_workbook = openpyxl.load_workbook(filename=template_xls)
+    template_workbook = openpyxl.load_workbook(filename=f'templates/{template_xls}')
 
     template_sheet = template_workbook['Orçamento']
     # create a new worksheet
@@ -116,7 +160,8 @@ def export_report(template_xls, proj_ID):
                         if cell.value == 'Total': new_sheet[f'{cell.coordinate[0]}{sector_position[1:]}'] = item['bom_avgprice']
                 
                 # composition func goes in here
-                if item['type'] == 'composicao': record_composition_data(template_workbook=template_workbook, new_workbook=new_workbook, comp_id=item["ID"], comp_name=item["name"], comp_unit=item['unit'], comp_proj_date=item['Proj_Date'], sector_dict=item['sector_dict'])
+                if item['type'] == 'composicao' and len(item['sector_dict']) != 0: record_composition_data(template_workbook=template_workbook, new_workbook=new_workbook, comp_id=item["ID"], comp_name=item["name"], comp_unit=item['unit'], comp_proj_date=item['Proj_Date'], sector_dict=item['sector_dict'])
+                elif item['type'] == 'insumo' and len(item['items_dict']) != 0: last_prod_position_value = record_item_data(template_workbook=template_workbook, new_workbook=new_workbook, prod_id=item['ID'], prod_name=item['name'], prod_unit=item['unit'], items_dict=item['items_dict'], last_prod_position_value=last_prod_position_value)
 
             # leave a row, then write Total de sectors in next row
             sector_position = f'{sector_position[0]}{int(sector_position[1:])+2}'
@@ -133,7 +178,6 @@ def export_report(template_xls, proj_ID):
     sectors_parameters_list = retrieve_parameters_cell_position_to_list(parameter_value='sectors parameters', template_sheet=template_sheet)
     project_parameters_list = retrieve_parameters_cell_position_to_list(parameter_value='project parameters', template_sheet=template_sheet)
 
-    print(project_parameters_list)
     for project in projects_data:
 
         for parameter in project_parameters_list:
@@ -155,7 +199,7 @@ def export_report(template_xls, proj_ID):
 
 
     # save new workbook
-    export_report_name = f"report_for_proj_ID_{proj_ID}.xlsx"
+    export_report_name = f"report_for_proj_ID_{proj_ID}+item.xlsx"
     new_workbook.save(filename=export_report_name)
 
     ##################
@@ -166,5 +210,5 @@ def export_report(template_xls, proj_ID):
 
 if __name__ == '__main__':
     template_xls='template_project_parameters_all_fields.xlsx'
-    proj_ID='composition'
+    proj_ID='projects2'
     export_report(template_xls=template_xls, proj_ID=proj_ID)
