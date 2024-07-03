@@ -1,4 +1,15 @@
 import openpyxl, json
+from openpyxl.styles import Font
+
+
+def format_cell_text(size: int, bolden: bool, color: str = None):
+
+    return Font(
+        name='Calibri',
+        bold=bolden,
+        size=size,
+        color=color,
+    )
 
 
 def retrieve_parameters_cell_position_to_list(parameter_value, template_sheet) -> list:
@@ -32,20 +43,33 @@ def record_composition_data(template_workbook, new_workbook, comp_id, comp_name,
     position_counter = 0
 
     for row in template_sheet.iter_rows():
+        
+        heading_coord = ''
+
         for cell in row:
             # insert normal parameters that are needed, such as heading
             if cell.value != None:
+                comp_sheet[cell.coordinate].font = format_cell_text(size=17, bolden=True) if cell.coordinate[1:] == '1' else format_cell_text(size=13, bolden=True)
                 comp_sheet[cell.coordinate] = cell.value
                 if 'comp' not in cell.value.lower(): comp_cells_data.update({cell.value: cell.coordinate})
             if cell.value in comp_data:
-                try: comp_sheet[cell.coordinate] = comp_data[cell.value]
+                try:
+                    comp_sheet[cell.coordinate].font = format_cell_text(size=12, bolden=True) 
+                    comp_sheet[cell.coordinate] = comp_data[cell.value]
                 except ValueError: pass
+
+    print(comp_cells_data)
 
     # fill in composition items data in sheet as per layout
     for sector in sector_dict:
         for comp_item in sector_dict[sector]:
             for cell_data in comp_cells_data:
                 cell_position = f'{comp_cells_data[cell_data][0]}{int(comp_cells_data[cell_data][1:]) + position_counter}'
+                
+                comp_sheet[cell_position].font = format_cell_text(size=9, bolden=False)
+                # highlight the table heading
+                comp_sheet[f'{cell_position[0]}{comp_cells_data["Código"][1:]}'].font = format_cell_text(size=11, bolden=True, color='31708f') 
+                
                 if cell_data in comp_item: comp_sheet[cell_position] = f'P.{comp_item[cell_data]}' if cell_data == 'ID' else  comp_item[cell_data]
                 if cell_data == 'bom_quant_avgprice':
                     bom_quant_avgprice = float(comp_item['bom_quant']) * float(comp_item['bom_avgprice'])
@@ -53,14 +77,17 @@ def record_composition_data(template_workbook, new_workbook, comp_id, comp_name,
                     all_total += bom_quant_avgprice
                 
                 if len(sector_dict[sector]) - 1 == position_counter:
+                    comp_sheet[f"{comp_cells_data['bom_quant'][0]}{int(comp_cells_data['bom_quant'][1:]) + position_counter + 1}"].font = format_cell_text(size=9, bolden=False)
                     comp_sheet[f"{comp_cells_data['bom_quant'][0]}{int(comp_cells_data['bom_quant'][1:]) + position_counter + 1}"] = 'TOTAL MATERIAL/EQUIPAMENTO'
+
+                    comp_sheet[f"{comp_cells_data['bom_quant_avgprice'][0]}{int(comp_cells_data['bom_quant_avgprice'][1:]) + position_counter + 1}"].font = format_cell_text(size=9, bolden=False)
                     comp_sheet[f"{comp_cells_data['bom_quant_avgprice'][0]}{int(comp_cells_data['bom_quant_avgprice'][1:]) + position_counter + 1}"] = all_total
                 
             # increment position to go to next row
             position_counter += 1
 
 
-def record_item_data(template_workbook, new_workbook, prod_id, prod_name, prod_unit, items_dict, last_prod_position_value):
+def record_item_data(template_workbook, new_workbook, proj_name, proj_client, prod_id, prod_name, prod_unit, items_dict, last_prod_position_value):
 
     # switch to item sheet in template file
     template_sheet = template_workbook['Cotações']
@@ -74,19 +101,31 @@ def record_item_data(template_workbook, new_workbook, prod_id, prod_name, prod_u
         for cell in row:
             # insert normal parameters that are needed, such as headings
             if cell.value != None:
-                if last_prod_position_value == 0: prod_sheet[cell.coordinate] = cell.value
+                if last_prod_position_value == 0:
+                    prod_sheet[cell.coordinate].font = format_cell_text(size=13, bolden=True)
+                    prod_sheet[cell.coordinate] = cell.value
+                    if cell.value == 'proj_name': prod_sheet[cell.coordinate] = proj_name 
+                    if cell.value == 'proj_client':
+                        prod_sheet[cell.coordinate].font = format_cell_text(size=12, bolden=True)
+                        prod_sheet[cell.coordinate] = proj_client 
 
                 if cell.value in ('EMPRESA', 'CONTATO', 'VALOR PROPOSTA (R$)'):
                     item_data.update({cell.value: cell.coordinate})
+                    prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'].font = format_cell_text(size=10, bolden=True)
                     prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'] = cell.value
 
             if cell.value in prod_data:
-                try: prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'] = prod_data[cell.value]
+                try:
+                    prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'].font = format_cell_text(size=11, bolden=True)
+                    prod_sheet[f'{cell.coordinate[0]}{int(cell.coordinate[1:]) + last_prod_position_value}'] = prod_data[cell.value]
                 except ValueError: pass
             
     last_prod_position_value += 1
 
     for item in items_dict:
+
+        for item_d in item_data: prod_sheet[f"{item_data[item_d][0]}{int(item_data[item_d][1:]) + last_prod_position_value}"].font = format_cell_text(size=9, bolden=False)
+        
         prod_sheet[f"{item_data['EMPRESA'][0]}{int(item_data['EMPRESA'][1:]) + last_prod_position_value}"] = f"{item['supplier_ID']} - {item['supplier']}"
         prod_sheet[f"{item_data['CONTATO'][0]}{int(item_data['CONTATO'][1:]) + last_prod_position_value}"] = f"{item['supplier_email']} - {item['supplier_address']} - {item['supplier_phone_1']}"
         if len(item['prices_history']) != 0:
@@ -127,17 +166,23 @@ def export_report(template_xls, proj_ID):
     # rename new_sheet
     new_sheet.title = template_sheet.title
 
-    # take note of last cell position, for use later
+    # take note of last cell position and project's data, for use later
     sector_position = None
+    proj_name = projects_data[0]['proj_name']
+    proj_client = projects_data[0]['proj_client']
+
     # use contents in template sheet to create contents in new sheet
     for row in template_sheet.iter_rows():
         for cell in row:
             # insert normal parameters that are needed, such as heading
             if cell.value != None:
+                new_sheet[cell.coordinate].font = format_cell_text(size=14, bolden=True) if cell.coordinate[1:] == '1' else format_cell_text(size=12, bolden=True)
                 new_sheet[cell.coordinate] = cell.value
             # insert values of parameters that are present in json
             if cell.value in projects_data[0]:
-                try: new_sheet[cell.coordinate] = projects_data[0][cell.value]
+                try:
+                    new_sheet[cell.coordinate].font = format_cell_text(size=11, bolden=True)
+                    new_sheet[cell.coordinate] = projects_data[0][cell.value]
                 except ValueError: pass
             # when finally at sectors, start restructuring data sector by sector, based on how many sectors are available
             if cell.value == 'sectors': sector_position = cell.coordinate
@@ -145,26 +190,31 @@ def export_report(template_xls, proj_ID):
     if sector_position is not None:
         for sector in projects_data[0]['sectors']:
             print(sector_position, sector)
+            new_sheet[sector_position].font = format_cell_text(size=10, bolden=True)
             new_sheet[sector_position] = sector
             
             sector_items = projects_data[0]['sectors'][sector]
             for item in sector_items:
                 # increment cell position to write items under sector
                 sector_position = f'{sector_position[0]}{int(sector_position[1:])+1}'
+                new_sheet[sector_position].font = format_cell_text(size=9, bolden=False)
                 new_sheet[sector_position] = f'{item["ID"]} {item["name"]}'
                 # loop through template again to get positions of quantity, unit and total
                 for row in template_sheet.iter_rows():
                     for cell in row:
+                        if cell.value in ('Qtd.', 'Un', 'Total'): new_sheet[f'{cell.coordinate[0]}{sector_position[1:]}'].font = format_cell_text(size=9, bolden=False)
                         if cell.value == 'Qtd.': new_sheet[f'{cell.coordinate[0]}{sector_position[1:]}'] = item['bom_quant']
                         if cell.value == 'Un': new_sheet[f'{cell.coordinate[0]}{sector_position[1:]}'] = item['unit']
                         if cell.value == 'Total': new_sheet[f'{cell.coordinate[0]}{sector_position[1:]}'] = item['bom_avgprice']
                 
                 # composition func goes in here
                 if item['type'] == 'composicao' and len(item['sector_dict']) != 0: record_composition_data(template_workbook=template_workbook, new_workbook=new_workbook, comp_id=item["ID"], comp_name=item["name"], comp_unit=item['unit'], comp_proj_date=item['Proj_Date'], sector_dict=item['sector_dict'])
-                elif item['type'] == 'insumo' and len(item['items_dict']) != 0: last_prod_position_value = record_item_data(template_workbook=template_workbook, new_workbook=new_workbook, prod_id=item['ID'], prod_name=item['name'], prod_unit=item['unit'], items_dict=item['items_dict'], last_prod_position_value=last_prod_position_value)
+
+                if item['type'] == 'insumo' and len(item['items_dict']) != 0: last_prod_position_value = record_item_data(template_workbook=template_workbook, new_workbook=new_workbook, proj_name=proj_name, proj_client=proj_client, prod_id=item['ID'], prod_name=item['name'], prod_unit=item['unit'], items_dict=item['items_dict'], last_prod_position_value=last_prod_position_value)
 
             # leave a row, then write Total de sectors in next row
             sector_position = f'{sector_position[0]}{int(sector_position[1:])+2}'
+            new_sheet[sector_position].font = format_cell_text(size=9, bolden=False)
             new_sheet[sector_position] = f'Total de {sector}'
             # leave a row again before the next loop
             sector_position = f'{sector_position[0]}{int(sector_position[1:])+2}'
@@ -182,6 +232,7 @@ def export_report(template_xls, proj_ID):
 
         for parameter in project_parameters_list:
             project_parameters_position = f'{project_parameters_position[0]}{int(project_parameters_position[1:])+1}'
+            new_sheet[project_parameters_position].font = format_cell_text(size=9, bolden=False)
             new_sheet[project_parameters_position] = f'{parameter}: {project[parameter]}'
         
         project_parameters_position = f'{project_parameters_position[0]}{int(project_parameters_position[1:])+1}'
@@ -190,7 +241,9 @@ def export_report(template_xls, proj_ID):
             for detail in project['sectors'][sector]:
                 for parameter in sectors_parameters_list:
                     sectors_parameters_position = f'{sectors_parameters_position[0]}{int(sectors_parameters_position[1:])+1}'
-                    try: new_sheet[sectors_parameters_position] = f'{parameter}: {detail[parameter]}'
+                    try:
+                        new_sheet[sectors_parameters_position].font = format_cell_text(size=9, bolden=False) 
+                        new_sheet[sectors_parameters_position] = f'{parameter}: {detail[parameter]}'
                     except: new_sheet[sectors_parameters_position] = ''
                 # leave a space for the next set of details in this sector, if any...
                 sectors_parameters_position = f'{sectors_parameters_position[0]}{int(sectors_parameters_position[1:])+1}'
@@ -210,5 +263,5 @@ def export_report(template_xls, proj_ID):
 
 if __name__ == '__main__':
     template_xls='template_project_parameters_all_fields.xlsx'
-    proj_ID='projects2'
+    proj_ID='11543'
     export_report(template_xls=template_xls, proj_ID=proj_ID)
