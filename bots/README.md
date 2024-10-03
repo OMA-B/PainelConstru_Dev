@@ -9,6 +9,6 @@ If you tried to run the `pa_api_get_items.py` file and it refused to budge..:
 
 -- at 2, run `python3 setup.py install` in the Terminal instead, if you're on Windows (make sure you're using python3 version, verify by typing `python --version` or `py -0p`)
 
--- after successful installation, run the file again, which should work now, flawlessly.
+-- after successful installation, run the file again, which should now work, flawlessly.
 
 ![Alt text](<Amazon Bot module/image.png>)
