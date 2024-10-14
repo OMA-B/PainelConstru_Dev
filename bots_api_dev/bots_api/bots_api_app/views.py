@@ -10,6 +10,9 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from .bots.leroy_18 import leroymerlin_spider
+from .bots.madeiramadeira_64 import madeiramadeira_spider
+
 
 # Create your views here.
 @api_view(['POST'])
@@ -53,14 +56,19 @@ def login(request):
 
         return Response(response_data)
 
-    return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+    return Response({'error': 'user not found: wrong password or username'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication, SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def fetch_bots_data(request):
 
-    return Response({'message': 'the bots data page'})
+    link = request.GET.get('link')
+
+    if 'www.leroymerlin.com.br' in link: data = leroymerlin_spider(link=link)
+    elif 'www.madeiramadeira.com.br' in link: data = madeiramadeira_spider(link=link)
+
+    return Response({'data': data, 'url': link})
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication, SessionAuthentication])
